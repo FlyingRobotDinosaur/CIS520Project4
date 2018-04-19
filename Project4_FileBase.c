@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define NUM_LINE 10
-#define LINE_SIZE 10000
+#define NUM_LINE 15
+#define LINE_SIZE 5000
 
 char **line_array;
 
@@ -20,14 +20,20 @@ char** alloc2dChar(int row, int col){
 //Use dynamic programming to find the longest common substring
 char* findLongestComnonSubstring(char *word1, char *word2){
   int len1 = strlen(word1), len2 = strlen(word2);
-  int longestTable [len1][len2];
+  printf("len1:%d len2:5=%d\n", len1, len2);
+  //Set up dynamic programming table
+  int *data = (int *) malloc(len1 * len2 * sizeof(int));
+  int **longestTable = (int **) malloc(len1 * sizeof(int*));
+  for(int i = 0; i < len1; i++)
+    longestTable[i] = &(data[len2*i]);
+
   int max = 0, maxI, maxJ;
 
   for(int i = 0; i < len1; i++){
       char letter1 = word1[i];
     for(int j = 0; j < len2; j++){
       char letter2 = word2[j];
-
+      //printf("@ %d,%d\n",i,j );
       //If ith and jth chars of word1 and word2 are equal then
       //it value is longestTable[i-1][j-1] + 1
       if(letter1 == letter2)
@@ -62,6 +68,7 @@ void main(int argc, char* argv[]){
   int err;
   int numlines = 0;
 
+  //set up 2d array for reading file
   line_array = alloc2dChar(NUM_LINE, LINE_SIZE);
 
   //Read in Wiki Lines
