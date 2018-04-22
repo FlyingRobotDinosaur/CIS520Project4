@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define NUM_THREADS 4
+#define NUM_THREADS 1
 #define NUM_LINE 15
 #define LINE_SIZE 5000
 
@@ -23,19 +23,21 @@ char** alloc2dChar(int row, int col){
 //Use dynamic programming to find the longest common substring
 char* findLongestComnonSubstring(char *word1, char *word2)
 {
+	
+	int k, i, j;
   int len1 = strlen(word1), len2 = strlen(word2);
   printf("len1:%d len2:5=%d\n", len1, len2);
   //Set up dynamic programming table
   int *data = (int *) malloc(len1 * len2 * sizeof(int));
   int **longestTable = (int **) malloc(len1 * sizeof(int*));
-  for(int i = 0; i < len1; i++)
-    longestTable[i] = &(data[len2*i]);
+  for(k = 0; k < len1; k++)
+    longestTable[k] = &(data[len2*k]);
 
   int max = 0, maxI, maxJ;
 
-  for(int i = 0; i < len1; i++){
+  for( i = 0; i < len1; i++){
       char letter1 = word1[i];
-    for(int j = 0; j < len2; j++){
+    for( j = 0; j < len2; j++){
       char letter2 = word2[j];
       //printf("@ %d,%d\n",i,j );
       //If ith and jth chars of word1 and word2 are equal then
@@ -67,18 +69,18 @@ char* findLongestComnonSubstring(char *word1, char *word2)
   return longestSubstring;
 }
 
-void processLine(int ID){
+void processLine(int ID, int numlines){
    
   int startLine, endLine, x;
   char *longS;
 
-  #pragma omp private(ID, startLine, endLine, x, longS)
+  #pragma omp private(ID, numlines, startLine, endLine, x, longS)
   {
   //use thread ID to choose what lines to process
-    startLine = ID * ((numlines-1)/NUM_Thread);
-    endLine = startLine + ((numlines-1)/NUM_Thread);
-    if(ID == NUM_Thread-1)
-      endLine += (numlines-1) % NUM_Thread;
+    startLine = ID * ((numlines-1)/NUM_THREADS);
+    endLine = startLine + ((numlines-1)/NUM_THREADS);
+    if(ID == NUM_THREADS-1)
+      endLine += (numlines-1) % NUM_THREADS;
 
   //For each pair of lines find the longest common substring
     for(x = startLine; x < endLine; x++){
@@ -96,6 +98,7 @@ void main(int argc, char* argv[]){
   FILE *fd;
   int err;
   int numlines = 0;
+  int x;
   omp_set_num_threads(NUM_THREADS);
 
   //set up 2d array for reading file
@@ -112,12 +115,14 @@ void main(int argc, char* argv[]){
   output = alloc2dChar(numlines-1, LINE_SIZE);
   #pragma omp parallel 
   {
-   processLine(omp_get_thread_num());
+   processLine(omp_get_thread_num(), numlines);
   }
 //Output result
-  for(int x = 0; x < numlines-1; x++){
+  for(x = 0; x < numlines-1; x++){
     printf("%d-%d: %s\n", x, x+1, output[x]);
   }
 
 }
+
+
 
